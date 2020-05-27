@@ -1,32 +1,7 @@
 /*
  * NAXSI, a web application firewall for NGINX
- * Copyright (C) 2016, Thibault 'bui' Koechlin
- *  
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- * 
- * In addition, as a special exception, the copyright holders give
- * permission to link the code of portions of this program with the
- * OpenSSL library under certain conditions as described in each
- * individual source file, and distribute linked combinations
- * including the two.
- * You must obey the GNU General Public License in all respects
- * for all of the code used other than OpenSSL.  If you modify
- * file(s) with this exception, you may extend this exception to your
- * version of the file(s), but you are not obligated to do so.  If you
- * do not wish to do so, delete this exception statement from your
- * version.  If you delete this exception statement from all source
- * files in the program, then also delete it here.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright (C) NBS System – All Rights Reserved
+ * Licensed under GNU GPL v3.0 – See the LICENSE notice for details
  */
 
 #include "naxsi.h"
@@ -330,17 +305,10 @@ ngx_http_dummy_json_parse(ngx_http_request_ctx_t *ctx,
   js->loc_cf = ngx_http_get_module_loc_conf(r, ngx_http_naxsi_module);
   js->main_cf = ngx_http_get_module_main_conf(r, ngx_http_naxsi_module);
 
-  if (ngx_http_nx_json_seek(js, '{')) {
-    ngx_http_apply_rulematch_v_n(&nx_int__invalid_json, ctx, r, NULL, NULL, BODY, 1, 0);
-    return ;
+  if (ngx_http_nx_json_val(js) != NGX_OK) {
+	ngx_http_apply_rulematch_v_n(&nx_int__invalid_json, ctx, r, NULL, NULL, BODY, 1, 0);
+	NX_DEBUG(_debug_json, NGX_LOG_DEBUG_HTTP, js->r->connection->log, 0, "nx_json_val returned error, apply invalid_json.");
   }
-  if (ngx_http_nx_json_obj(js) != NGX_OK) {
-    ngx_http_apply_rulematch_v_n(&nx_int__invalid_json, ctx, r, NULL, NULL, BODY, 1, 0);
-    NX_DEBUG(_debug_json, NGX_LOG_DEBUG_HTTP, js->r->connection->log, 0, "nx_json_obj returned error, apply invalid_json.");
-    
-  }
-  /* we are now on closing bracket, check for garbage. */
-  js->off++;
   ngx_http_nx_json_forward(js);
   if (js->off != js->len)
     ngx_http_apply_rulematch_v_n(&nx_int__invalid_json, ctx, r, NULL, NULL, BODY, 1, 0);
